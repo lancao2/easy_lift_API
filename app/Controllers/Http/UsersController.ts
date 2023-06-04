@@ -12,34 +12,34 @@ export default class UsersController {
     const sameUser = await User.findBy('email', data.email)
     try {
       if (!data.email || !data.password || !data.name) {
-        return response
-          .status(400)
-          .json({ message: 'invalid data, you need to provide, name, email and password' })
-      }
-      if (sameUser) {
-        return response.status(400).json({ message: 'this user already exists' })
-      }
-      const user = new User()
-      user.id = uuidv4()
-      user.createdAt = DateTime.local()
-      user.updatedAt = DateTime.local()
-      const hashedPassword = await Hash.make(data.password)
-      console.log(hashedPassword)
-      user.password = hashedPassword
+        response.status(400)
+        throw new Error('Dados invalidos, insira nome, email e senha.')
+      } else if (sameUser?.email === data.email) {
+        response.status(400)
+        throw new Error('Esse email já foi cadastrado')
+      } else {
+        const user = new User()
+        user.id = uuidv4()
+        user.createdAt = DateTime.local()
+        user.updatedAt = DateTime.local()
+        const hashedPassword = await Hash.make(data.password)
+        console.log(hashedPassword)
+        user.password = hashedPassword
 
-      user.fill(data)
-      user.save()
-      User.create(user)
+        user.fill(data)
+        user.save()
+        User.create(user)
 
-      return {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        created_at: user.createdAt,
-        updated_at: user.updatedAt,
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          created_at: user.createdAt,
+          updated_at: user.updatedAt,
+        }
       }
     } catch (error) {
-      return { error: error }
+      return { error: error.message }
     }
   }
 
